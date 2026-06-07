@@ -6,7 +6,11 @@ function isValidEmail(email: string): boolean {
 }
 
 async function getAuthClient() {
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+  let privateKey = process.env.GOOGLE_PRIVATE_KEY ?? ''
+  // Handle both escaped \n and real newlines from different env sources
+  privateKey = privateKey.replace(/\\n/g, '\n')
+  // Strip surrounding quotes if accidentally included
+  privateKey = privateKey.replace(/^["']|["']$/g, '')
   const auth = new google.auth.JWT({
     email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     key: privateKey,
