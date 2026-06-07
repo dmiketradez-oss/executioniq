@@ -6,11 +6,14 @@ function isValidEmail(email: string): boolean {
 }
 
 async function getAuthClient() {
-  let privateKey = process.env.GOOGLE_PRIVATE_KEY ?? ''
-  // Handle both escaped \n and real newlines from different env sources
-  privateKey = privateKey.replace(/\\n/g, '\n')
-  // Strip surrounding quotes if accidentally included
-  privateKey = privateKey.replace(/^["']|["']$/g, '')
+  const raw = process.env.GOOGLE_PRIVATE_KEY ?? ''
+  // Support base64-encoded key (avoids all newline/quote issues in Vercel)
+  let privateKey: string
+  if (!raw.includes('-----BEGIN')) {
+    privateKey = Buffer.from(raw, 'base64').toString('utf-8')
+  } else {
+    privateKey = raw.replace(/\\n/g, '\n').replace(/^["']|["']$/g, '')
+  }
   const auth = new google.auth.JWT({
     email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     key: privateKey,
